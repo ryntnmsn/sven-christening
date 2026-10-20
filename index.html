@@ -401,7 +401,9 @@
         background: #fffaf0;
         box-shadow: 0 4px 14px #493a252b;
         color: #5b4937;
-        font: 600 12px/1.4 "Poppins", sans-serif;
+        font:
+          600 12px/1.4 "Poppins",
+          sans-serif;
         text-align: center;
         pointer-events: none;
       }
@@ -649,7 +651,8 @@
           draggable="false"
         />
         <div class="balloon-speech" id="hot-air-speech" role="status" hidden>
-          Hoy! Tulungan mo naman ako makababa para hindi ako nakaharang dito. Tsk!
+          Hello po! Tulungan mo po ako makababa para hindi po ako nakaharang
+          dito hehe.
         </div>
         <section class="gallery-section" aria-labelledby="gallery-title">
           <h2 id="gallery-title" class="gallery-title">
@@ -703,7 +706,13 @@
         </button>
       </section>
     </main>
-    <img class="ground-decoration" id="ground-decoration" src="ground.png" alt="" aria-hidden="true" />
+    <img
+      class="ground-decoration"
+      id="ground-decoration"
+      src="ground.png"
+      alt=""
+      aria-hidden="true"
+    />
     <dialog class="lightbox" id="lightbox" aria-label="Photo viewer">
       <div class="lightbox-toolbar">
         <span class="lightbox-count" id="lightbox-count"></span>
@@ -744,18 +753,28 @@
         if (hotAirSpeech.hidden || detailsScreen.hidden) return;
         const balloonRect = hotAirBalloon.getBoundingClientRect();
         const speechRect = hotAirSpeech.getBoundingClientRect();
-        const useRightSide = window.innerWidth - balloonRect.right >= speechRect.width + 16;
-        let left = useRightSide ? balloonRect.right + 10 : balloonRect.left - speechRect.width - 10;
-        left = Math.max(8, Math.min(left, window.innerWidth - speechRect.width - 8));
+        const useRightSide =
+          window.innerWidth - balloonRect.right >= speechRect.width + 16;
+        let left = useRightSide
+          ? balloonRect.right + 10
+          : balloonRect.left - speechRect.width - 10;
+        left = Math.max(
+          8,
+          Math.min(left, window.innerWidth - speechRect.width - 8),
+        );
         let top = balloonRect.top + balloonRect.height * 0.32;
-        top = Math.max(8, Math.min(top, window.innerHeight - speechRect.height - 8));
+        top = Math.max(
+          8,
+          Math.min(top, window.innerHeight - speechRect.height - 8),
+        );
         hotAirSpeech.style.left = `${left}px`;
         hotAirSpeech.style.top = `${top}px`;
         hotAirSpeech.classList.toggle("points-right", !useRightSide);
       }
       function followSpeech() {
         positionSpeech();
-        if (!hotAirSpeech.hidden && !detailsScreen.hidden) requestAnimationFrame(followSpeech);
+        if (!hotAirSpeech.hidden && !detailsScreen.hidden)
+          requestAnimationFrame(followSpeech);
       }
       function showSpeechAfterDelay() {
         if (speechRevealed || speechTimeout) return;
@@ -816,9 +835,10 @@
         const balloonRect = hotAirBalloon.getBoundingClientRect();
         const groundRect = groundDecoration.getBoundingClientRect();
         const groundSurface = groundRect.top + groundRect.height * 0.28;
-        const overlapsGround = balloonRect.bottom >= groundSurface
-          && balloonRect.right > groundRect.left
-          && balloonRect.left < groundRect.right;
+        const overlapsGround =
+          balloonRect.bottom >= groundSurface &&
+          balloonRect.right > groundRect.left &&
+          balloonRect.left < groundRect.right;
         if (overlapsGround === balloonLanded) return;
         balloonLanded = overlapsGround;
         hotAirBalloon.src = balloonLanded ? "sven.png" : "hot_1.png";
@@ -829,7 +849,8 @@
             ? "Sven landed on the ground. Move with a drag or the arrow keys."
             : "Move the hot-air balloon with a drag or the arrow keys",
         );
-        hotAirSpeech.hidden = balloonLanded || !speechRevealed || detailsScreen.hidden;
+        hotAirSpeech.hidden =
+          balloonLanded || !speechRevealed || detailsScreen.hidden;
         if (!hotAirSpeech.hidden) followSpeech();
       }
       function freezeBalloonAt(rect) {
@@ -926,7 +947,7 @@
       setInterval(updateCountdown, 1000);
 
       const galleryFiles = Array.from(
-        { length: 20 },
+        { length: 40 },
         (_, index) => `img (${index + 1}).jpg`,
       );
       const galleryGrid = document.getElementById("gallery-grid");
