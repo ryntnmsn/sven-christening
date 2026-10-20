@@ -50,6 +50,16 @@
         align-items: center;
         padding: 0 0 30px;
       }
+      .ground-decoration {
+        position: fixed;
+        z-index: 10;
+        bottom: 0;
+        left: max(0px, calc((100vw - 570px) / 2));
+        display: block;
+        width: min(570px, 100vw);
+        height: auto;
+        pointer-events: none;
+      }
       .eyebrow {
         margin: 0;
         color: #5489a8;
@@ -358,6 +368,7 @@
       }
       .details-hot-air {
         position: fixed;
+        z-index: 11;
         top: 0;
         left: max(0px, calc((100vw - 570px) / 2));
         width: min(200px, 56vw);
@@ -375,6 +386,39 @@
       }
       .details-hot-air.placed {
         animation: ocean-sail 4.2s ease-in-out infinite;
+      }
+      .details-hot-air.landed {
+        width: min(180px, 56vw);
+      }
+      .balloon-speech {
+        position: fixed;
+        z-index: 12;
+        width: max-content;
+        max-width: min(230px, 64vw);
+        padding: 10px 14px;
+        border: 1px solid #e6d7ba;
+        border-radius: 18px;
+        background: #fffaf0;
+        box-shadow: 0 4px 14px #493a252b;
+        color: #5b4937;
+        font: 600 12px/1.4 "Poppins", sans-serif;
+        text-align: center;
+        pointer-events: none;
+      }
+      .balloon-speech::after {
+        position: absolute;
+        top: 50%;
+        left: -14px;
+        border: 7px solid transparent;
+        border-right-color: #fffaf0;
+        content: "";
+        transform: translateY(-50%);
+      }
+      .balloon-speech.points-right::after {
+        right: -14px;
+        left: auto;
+        border-right-color: transparent;
+        border-left-color: #fffaf0;
       }
       .cloud {
         position: absolute;
@@ -604,6 +648,9 @@
           aria-label="Move the hot-air balloon with a drag or the arrow keys"
           draggable="false"
         />
+        <div class="balloon-speech" id="hot-air-speech" role="status" hidden>
+          Hoy! Tulungan mo naman ako makababa.
+        </div>
         <section class="gallery-section" aria-labelledby="gallery-title">
           <h2 id="gallery-title" class="gallery-title">
             <img
@@ -656,6 +703,7 @@
         </button>
       </section>
     </main>
+    <img class="ground-decoration" id="ground-decoration" src="ground.png" alt="" aria-hidden="true" />
     <dialog class="lightbox" id="lightbox" aria-label="Photo viewer">
       <div class="lightbox-toolbar">
         <span class="lightbox-count" id="lightbox-count"></span>
@@ -689,10 +737,54 @@
     <script>
       const coverScreen = document.getElementById("cover-screen");
       const detailsScreen = document.getElementById("details-screen");
+      const hotAirSpeech = document.getElementById("hot-air-speech");
+      let speechTimeout = null;
+      let speechRevealed = false;
+      function positionSpeech() {
+        if (hotAirSpeech.hidden || detailsScreen.hidden) return;
+        const balloonRect = hotAirBalloon.getBoundingClientRect();
+        const speechRect = hotAirSpeech.getBoundingClientRect();
+        const useRightSide = window.innerWidth - balloonRect.right >= speechRect.width + 16;
+        let left = useRightSide ? balloonRect.right + 10 : balloonRect.left - speechRect.width - 10;
+        left = Math.max(8, Math.min(left, window.innerWidth - speechRect.width - 8));
+        let top = balloonRect.top + balloonRect.height * 0.32;
+        top = Math.max(8, Math.min(top, window.innerHeight - speechRect.height - 8));
+        hotAirSpeech.style.left = `${left}px`;
+        hotAirSpeech.style.top = `${top}px`;
+        hotAirSpeech.classList.toggle("points-right", !useRightSide);
+      }
+      function followSpeech() {
+        positionSpeech();
+        if (!hotAirSpeech.hidden && !detailsScreen.hidden) requestAnimationFrame(followSpeech);
+      }
+      function showSpeechAfterDelay() {
+        if (speechRevealed || speechTimeout) return;
+        speechTimeout = setTimeout(() => {
+          speechTimeout = null;
+          if (detailsScreen.hidden) return;
+          speechRevealed = true;
+          if (!balloonLanded) {
+            hotAirSpeech.hidden = false;
+            followSpeech();
+          }
+        }, 10000);
+      }
       function showScreen(screen, updateHistory = true) {
         const showDetails = screen === "details";
         coverScreen.hidden = showDetails;
         detailsScreen.hidden = !showDetails;
+        if (showDetails) {
+          if (speechRevealed && !balloonLanded) {
+            hotAirSpeech.hidden = false;
+            followSpeech();
+          } else {
+            showSpeechAfterDelay();
+          }
+        } else {
+          if (speechTimeout) clearTimeout(speechTimeout);
+          speechTimeout = null;
+          hotAirSpeech.hidden = true;
+        }
         document.title = showDetails
           ? "Invitation Details — Sven"
           : "You're Invited — Sven's Celebration";
@@ -713,12 +805,33 @@
       window.addEventListener("popstate", () =>
         showScreen(location.hash === "#details" ? "details" : "cover", false),
       );
-      if (location.hash === "#details") showScreen("details", false);
 
       const hotAirBalloon = document.getElementById("hot-air-balloon");
+      const groundDecoration = document.getElementById("ground-decoration");
       let balloonPointerStart = null;
       let balloonDragOffset = null;
       let balloonHasMoved = false;
+      let balloonLanded = false;
+      function checkBalloonLanding() {
+        const balloonRect = hotAirBalloon.getBoundingClientRect();
+        const groundRect = groundDecoration.getBoundingClientRect();
+        const groundSurface = groundRect.top + groundRect.height * 0.28;
+        const overlapsGround = balloonRect.bottom >= groundSurface
+          && balloonRect.right > groundRect.left
+          && balloonRect.left < groundRect.right;
+        if (overlapsGround === balloonLanded) return;
+        balloonLanded = overlapsGround;
+        hotAirBalloon.src = balloonLanded ? "sven.png" : "hot_1.png";
+        hotAirBalloon.classList.toggle("landed", balloonLanded);
+        hotAirBalloon.setAttribute(
+          "aria-label",
+          balloonLanded
+            ? "Sven landed on the ground. Move with a drag or the arrow keys."
+            : "Move the hot-air balloon with a drag or the arrow keys",
+        );
+        hotAirSpeech.hidden = balloonLanded || !speechRevealed || detailsScreen.hidden;
+        if (!hotAirSpeech.hidden) followSpeech();
+      }
       function freezeBalloonAt(rect) {
         hotAirBalloon.classList.remove("placed");
         hotAirBalloon.style.animation = "none";
@@ -757,6 +870,7 @@
         }
         hotAirBalloon.style.left = `${event.clientX - balloonDragOffset.x}px`;
         hotAirBalloon.style.top = `${event.clientY - balloonDragOffset.y}px`;
+        checkBalloonLanding();
       });
       function finishBalloonDrag(event) {
         if (hotAirBalloon.hasPointerCapture(event.pointerId))
@@ -764,6 +878,7 @@
         balloonPointerStart = null;
         balloonDragOffset = null;
         hotAirBalloon.classList.remove("dragging");
+        checkBalloonLanding();
         resumeBalloonFloat();
       }
       hotAirBalloon.addEventListener("pointerup", finishBalloonDrag);
@@ -784,8 +899,10 @@
         }
         hotAirBalloon.style.left = `${Number.parseFloat(hotAirBalloon.style.left) + move[0]}px`;
         hotAirBalloon.style.top = `${Number.parseFloat(hotAirBalloon.style.top) + move[1]}px`;
+        checkBalloonLanding();
         resumeBalloonFloat();
       });
+      if (location.hash === "#details") showScreen("details", false);
 
       const countdownTarget = new Date("2026-12-12T14:30:00+08:00").getTime();
       const countdownParts = {
