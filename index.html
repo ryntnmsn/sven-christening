@@ -157,7 +157,7 @@
       }
       .rsvp-section {
         width: 100%;
-        padding: 28px 18px 32px;
+        padding: 28px 0;
         background: url("background.jpg") center / cover no-repeat;
       }
       .rsvp-heading {
@@ -506,7 +506,7 @@
       }
       @media (max-width: 380px) {
         .page {
-          padding: 0 15px 26px;
+          padding: 0;
         }
         .note {
           font-size: 16px;
@@ -606,7 +606,11 @@
         />
         <section class="gallery-section" aria-labelledby="gallery-title">
           <h2 id="gallery-title" class="gallery-title">
-            <img class="gallery-heading" src="gallery_text.png" alt="Photo gallery" />
+            <img
+              class="gallery-heading"
+              src="gallery_text.png"
+              alt="Photo gallery"
+            />
           </h2>
           <div class="gallery-grid" id="gallery-grid" aria-live="polite"></div>
           <div class="gallery-controls" aria-label="Gallery pages">
@@ -644,7 +648,8 @@
             scrolling="no"
             title="RSVP form"
             loading="lazy"
-          >Loading…</iframe>
+            >Loading…</iframe
+          >
         </section>
         <button class="back-button" id="back-to-cover" type="button">
           ← Back to invitation
@@ -743,7 +748,10 @@
           if (Math.hypot(dx, dy) < 4) return;
           const rect = hotAirBalloon.getBoundingClientRect();
           freezeBalloonAt(rect);
-          balloonDragOffset = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+          balloonDragOffset = {
+            x: event.clientX - rect.left,
+            y: event.clientY - rect.top,
+          };
           balloonHasMoved = true;
           hotAirBalloon.classList.add("dragging");
         }
@@ -751,7 +759,8 @@
         hotAirBalloon.style.top = `${event.clientY - balloonDragOffset.y}px`;
       });
       function finishBalloonDrag(event) {
-        if (hotAirBalloon.hasPointerCapture(event.pointerId)) hotAirBalloon.releasePointerCapture(event.pointerId);
+        if (hotAirBalloon.hasPointerCapture(event.pointerId))
+          hotAirBalloon.releasePointerCapture(event.pointerId);
         balloonPointerStart = null;
         balloonDragOffset = null;
         hotAirBalloon.classList.remove("dragging");
@@ -760,7 +769,12 @@
       hotAirBalloon.addEventListener("pointerup", finishBalloonDrag);
       hotAirBalloon.addEventListener("pointercancel", finishBalloonDrag);
       hotAirBalloon.addEventListener("keydown", (event) => {
-        const moves = { ArrowUp: [0, -12], ArrowDown: [0, 12], ArrowLeft: [-12, 0], ArrowRight: [12, 0] };
+        const moves = {
+          ArrowUp: [0, -12],
+          ArrowDown: [0, 12],
+          ArrowLeft: [-12, 0],
+          ArrowRight: [12, 0],
+        };
         const move = moves[event.key];
         if (!move) return;
         event.preventDefault();
