@@ -119,6 +119,23 @@
         width: 100%;
         line-height: 0;
       }
+      .music-hotspot {
+        position: absolute;
+        z-index: 3;
+        left: 60%;
+        top: 20%;
+        width: 24%;
+        height: 3.5%;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+      }
+      .music-hotspot:focus-visible {
+        outline: 3px solid #fff;
+        outline-offset: 2px;
+        box-shadow: 0 0 0 5px #66543f;
+      }
       .details-image {
         display: block;
         width: 100%;
@@ -180,7 +197,7 @@
       .rsvp-form {
         display: block;
         width: 100%;
-        height: 1600px;
+        height: 1200px;
         border: 0;
         background: transparent;
       }
@@ -617,6 +634,13 @@
             src="layer_2.jpg"
             alt="Sven's invitation details, event information, gift ideas, health protocols, and dress code."
           />
+          <button
+            class="music-hotspot"
+            id="music-hotspot"
+            type="button"
+            aria-label="Click to play music"
+            title="Click to play music"
+          ></button>
           <div
             class="event-countdown"
             role="timer"
@@ -713,6 +737,7 @@
       alt=""
       aria-hidden="true"
     />
+    <audio id="invitation-music" src="sven_mp3.mp4" preload="none" loop></audio>
     <dialog class="lightbox" id="lightbox" aria-label="Photo viewer">
       <div class="lightbox-toolbar">
         <span class="lightbox-count" id="lightbox-count"></span>
@@ -746,6 +771,11 @@
     <script>
       const coverScreen = document.getElementById("cover-screen");
       const detailsScreen = document.getElementById("details-screen");
+      const invitationMusic = document.getElementById("invitation-music");
+      document.getElementById("music-hotspot").addEventListener("click", () => {
+        if (invitationMusic.paused) invitationMusic.play().catch(() => {});
+        else invitationMusic.pause();
+      });
       const hotAirSpeech = document.getElementById("hot-air-speech");
       let speechTimeout = null;
       let speechRevealed = false;
