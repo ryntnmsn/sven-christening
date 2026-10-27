@@ -2,5 +2,5 @@
 
 return [
     App\Providers\AppServiceProvider::class,
-    Illuminate\View\ViewServiceProvider::class,
+    // Illuminate\View\ViewServiceProvider::class,
 ];
