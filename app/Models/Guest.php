@@ -37,7 +37,7 @@ class Guest extends Model
     {
         return [
             'sub_guests' => 'integer',
-            'confirmed' => 'boolean',
+            'confirmed' => 'integer',
         ];
     }
 }

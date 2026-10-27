@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class RsvpController extends Controller
 {
@@ -35,10 +36,10 @@ class RsvpController extends Controller
 
         $guest = $matches->first();
 
-        if ($guest->confirmed) {
+        if ($guest->confirmed !== 0) {
             return response()->json([
                 'eligible' => false,
-                'message' => 'Your seat has already been confirmed. Thank you!',
+                'message' => 'Your RSVP has already been recorded. Thank you!',
             ]);
         }
 
@@ -85,45 +86,79 @@ class RsvpController extends Controller
             ], 422);
         }
 
-        $validator = Validator::make($request->all(), [
-            'sub_guests' => ['present', 'array', 'size:'.$guest->sub_guests],
-            'sub_guests.*.name' => ['nullable', 'string', 'max:255'],
-            'sub_guests.*.attending' => ['required', 'boolean'],
-        ]);
-        $validator->after(function ($validator) use ($request): void {
-            foreach ($request->input('sub_guests', []) as $position => $subGuest) {
-                if (is_array($subGuest)
-                    && filter_var($subGuest['attending'] ?? false, FILTER_VALIDATE_BOOLEAN)
-                    && blank($subGuest['name'] ?? null)) {
-                    $validator->errors()->add("sub_guests.{$position}.name", 'Enter the name of each sub guest who will attend.');
-                }
-            }
-        });
-        $validated = $validator->validate();
+        $response = (int) $request->validate([
+            'response' => ['required', 'integer', Rule::in([1, 2])],
+        ])['response'];
+        if ($response === 1) {
+            $request->validate(['guest_attending' => ['required', 'boolean']]);
+        }
 
-        $result = DB::transaction(function () use ($request, $validated): array {
+        $guestAttending = $response === 1 && $request->boolean('guest_attending');
+
+        if ($response === 2 && $guest->sub_guests > 0) {
+            return response()->json([
+                'confirmed' => false,
+                'message' => 'Please respond using the guest options on your invitation.',
+            ], 422);
+        }
+
+        if ($response === 1) {
+            $validator = Validator::make($request->all(), [
+                'sub_guests' => ['present', 'array', 'size:'.$guest->sub_guests],
+                'sub_guests.*.name' => ['nullable', 'string', 'max:255'],
+                'sub_guests.*.attending' => ['required', 'boolean'],
+            ]);
+            $validator->after(function ($validator) use ($request): void {
+                foreach ($request->input('sub_guests', []) as $position => $subGuest) {
+                    if (is_array($subGuest)
+                        && filter_var($subGuest['attending'] ?? false, FILTER_VALIDATE_BOOLEAN)
+                        && blank($subGuest['name'] ?? null)) {
+                        $validator->errors()->add("sub_guests.{$position}.name", 'Enter the name of each sub guest who will attend.');
+                    }
+                }
+            });
+            $validated = $validator->validate();
+        } else {
+            $validated = ['sub_guests' => []];
+        }
+
+        $result = DB::transaction(function () use ($request, $validated, $response, $guestAttending): array {
             $guest = Guest::query()->lockForUpdate()->find($request->session()->get('rsvp.guest_id'));
 
-        if (! $guest) {
+            if (! $guest) {
                 return ['confirmed' => false, 'message' => 'We could not find that invitation. Please check your name and code again.'];
             }
 
-            if ($guest->confirmed) {
-                return ['confirmed' => false, 'message' => 'Your seat has already been confirmed. Thank you!'];
+            if ($guest->confirmed !== 0) {
+                return ['confirmed' => false, 'message' => 'Your RSVP has already been recorded. Thank you!'];
             }
 
-            $guest->confirmed = true;
+            if ($response === 2 && $guest->sub_guests > 0) {
+                return ['confirmed' => false, 'message' => 'Please respond using the guest options on your invitation.'];
+            }
+
+            $guest->confirmed = $guestAttending ? 1 : 2;
             $guest->save();
 
             foreach ($validated['sub_guests'] as $position => $subGuest) {
+                if (blank($subGuest['name'] ?? null)) {
+                    continue;
+                }
+
                 $guest->subGuestResponses()->create([
                     'position' => $position + 1,
-                    'name' => filled($subGuest['name'] ?? null) ? trim($subGuest['name']) : null,
+                    'name' => trim($subGuest['name']),
                     'attending' => filter_var($subGuest['attending'], FILTER_VALIDATE_BOOLEAN),
                 ]);
             }
 
-            return ['confirmed' => true, 'message' => 'Your seat is confirmed. We look forward to celebrating with you!'];
+            return [
+                'confirmed' => true,
+                'response' => $guestAttending ? 1 : 2,
+                'message' => $guestAttending
+                    ? 'Your seat is confirmed. We look forward to celebrating with you!'
+                    : 'Your response has been recorded. Thank you for letting us know.',
+            ];
         });
 
         $request->session()->forget(['rsvp.guest_id', 'rsvp.guest_name', 'rsvp.guest_code']);

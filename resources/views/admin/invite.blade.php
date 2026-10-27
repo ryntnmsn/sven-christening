@@ -77,7 +77,7 @@
                                         <td class="px-5 py-4 font-medium">{{ $guest->name }}</td>
                                         <td class="px-5 py-4 font-mono font-semibold tracking-[0.14em] text-[#76583f]">{{ $guest->code }}</td>
                                         <td class="px-5 py-4">
-                                            <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $guest->confirmed ? 'bg-[#eef5eb] text-[#476344]' : 'bg-[#f5f1ec] text-[#837467]' }}">{{ $guest->confirmed ? 'Confirmed' : 'Pending' }}</span>
+                                            <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $guest->confirmed === 1 ? 'bg-[#eef5eb] text-[#476344]' : ($guest->confirmed === 2 ? 'bg-[#fcf3f1] text-[#9b4939]' : 'bg-[#f5f1ec] text-[#837467]') }}">{{ $guest->confirmed === 1 ? 'Confirmed' : ($guest->confirmed === 2 ? 'Not attending' : 'Pending') }}</span>
                                         </td>
                                         <td class="px-5 py-4 text-right">{{ $guest->sub_guests }}</td>
                                         <td class="px-5 py-4 text-right">

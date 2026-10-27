@@ -8,8 +8,25 @@
     <link rel="icon" type="image/png" href="/favicon.png?v=2" />
     <base href="{{ url('/') }}/" />
     <meta name="theme-color" content="#e9f7fc" />
-    <meta name="description" content="You're invited to celebrate with Sven!" />
+    <meta name="description" content="You're invited to celebrate Sven! Open your invitation and RSVP to let us know if you'll be there." />
     <title>You're Invited — Sven's Celebration</title>
+    <link rel="canonical" href="{{ route('home') }}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:site_name" content="Sven's Celebration" />
+    <meta property="og:title" content="You're Invited — Sven's Celebration" />
+    <meta property="og:description" content="You're invited to celebrate Sven! Open your invitation and RSVP to let us know if you'll be there." />
+    <meta property="og:url" content="{{ route('home') }}" />
+    <meta property="og:image" content="{{ asset('favicon.png') }}" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="128" />
+    <meta property="og:image:height" content="128" />
+    <meta property="og:image:alt" content="A portrait of Sven" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="You're Invited — Sven's Celebration" />
+    <meta name="twitter:description" content="You're invited to celebrate Sven! Open your invitation and RSVP to let us know if you'll be there." />
+    <meta name="twitter:image" content="{{ asset('favicon.png') }}" />
+    <meta name="twitter:image:alt" content="A portrait of Sven" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -267,6 +284,14 @@
       }
       .rsvp-match-box[hidden] {
         display: none;
+      }
+      .rsvp-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .rsvp-actions .rsvp-action {
+        flex: 1 1 160px;
       }
       .rsvp-match-label {
         margin: 0;
@@ -951,8 +976,17 @@
               <p class="rsvp-match-label">Invitation found for</p>
               <p class="rsvp-match-name" id="rsvp-matched-name"></p>
               <p class="rsvp-reserved-note" id="rsvp-reserved-note" hidden></p>
+              <div class="rsvp-subguest-row" id="rsvp-primary-guest-row">
+                <input class="rsvp-input" id="rsvp-primary-guest-name" type="text" disabled aria-label="Guest name" />
+                <label class="rsvp-attend" for="rsvp-primary-guest-attending">
+                  <input id="rsvp-primary-guest-attending" type="checkbox" checked />
+                  <span>Attend</span>
+                </label>
+              </div>
               <div class="rsvp-subguest-fields" id="rsvp-subguest-fields" hidden></div>
-              <button class="rsvp-action" id="rsvp-confirm" type="button">Confirm my seat</button>
+              <div class="rsvp-actions">
+                <button class="rsvp-action" id="rsvp-confirm" type="button">Confirm my seat</button>
+              </div>
             </div>
           </form>
         </section>
@@ -974,7 +1008,7 @@
       <div class="rsvp-confirmation-content">
         <img class="rsvp-confirmation-icon" src="sven_well.png" alt="Sven" />
         <p class="rsvp-confirmation-message" id="rsvp-confirmation-message">WELL! WELL! WELL! I'LL SEE YOU THEN</p>
-        <p class="rsvp-confirmation-thanks">Thank you for confirming</p>
+        <p class="rsvp-confirmation-thanks" id="rsvp-confirmation-thanks">Thank you for confirming</p>
         <button class="rsvp-confirmation-close" id="rsvp-confirmation-close" type="button">Close</button>
       </div>
     </dialog>
@@ -1306,8 +1340,12 @@
       const rsvpMatchedName = document.getElementById("rsvp-matched-name");
       const rsvpReservedNote = document.getElementById("rsvp-reserved-note");
       const rsvpSubGuestFields = document.getElementById("rsvp-subguest-fields");
+      const rsvpPrimaryGuestName = document.getElementById("rsvp-primary-guest-name");
+      const rsvpPrimaryGuestAttending = document.getElementById("rsvp-primary-guest-attending");
       const rsvpConfirmationModal = document.getElementById("rsvp-confirmation-modal");
       const rsvpConfettiLayer = document.getElementById("rsvp-confetti-layer");
+      const rsvpConfirmationMessage = document.getElementById("rsvp-confirmation-message");
+      const rsvpConfirmationThanks = document.getElementById("rsvp-confirmation-thanks");
       const confettiColors = ["#6b4b35", "#b28b5c", "#91c6d2", "#5f9fb7", "#f0d9a8", "#ffffff"];
       const burstConfetti = () => {
         rsvpConfettiLayer.replaceChildren();
@@ -1371,6 +1409,8 @@
           setRsvpStatus(result.message);
           if (result.eligible) {
             rsvpMatchedName.textContent = result.full_name;
+            rsvpPrimaryGuestName.value = result.full_name;
+            rsvpPrimaryGuestAttending.checked = true;
             rsvpSubGuestFields.replaceChildren();
             rsvpReservedNote.hidden = result.sub_guests < 1;
             if (result.sub_guests > 0) {
@@ -1414,7 +1454,7 @@
           rsvpLookup.disabled = false;
         }
       });
-      rsvpConfirm.addEventListener("click", async () => {
+      const submitRsvp = async () => {
         rsvpConfirm.disabled = true;
         setRsvpStatus("Confirming your seat…");
         try {
@@ -1422,22 +1462,29 @@
             name: row.querySelector('input[type="text"]').value.trim() || null,
             attending: row.querySelector('input[type="checkbox"]').checked,
           }));
-          const result = await postRsvp("{{ route('rsvp.confirm', [], false) }}", { sub_guests: subGuests });
+          const guestAttending = rsvpPrimaryGuestAttending.checked;
+          const result = await postRsvp("{{ route('rsvp.confirm', [], false) }}", {
+            response: 1,
+            guest_attending: guestAttending,
+            sub_guests: subGuests,
+          });
           rsvpMatchBox.hidden = true;
           if (result.confirmed) {
             setRsvpStatus("");
+            rsvpConfirmationMessage.textContent = result.response === 1 ? "WELL! WELL! WELL! I'LL SEE YOU THEN" : "WE'LL MISS YOU!";
+            rsvpConfirmationThanks.textContent = result.response === 1 ? "Thank you for confirming" : "Thank you for letting us know";
             rsvpConfirmationModal.showModal();
-            burstConfetti();
+            if (result.response === 1) burstConfetti();
           } else {
             setRsvpStatus(result.message);
           }
         } catch (error) {
           setRsvpStatus(error.message);
-          rsvpConfirm.hidden = true;
         } finally {
           rsvpConfirm.disabled = false;
         }
-      });
+      };
+      rsvpConfirm.addEventListener("click", submitRsvp);
       renderGallery();
     </script>
   </body>

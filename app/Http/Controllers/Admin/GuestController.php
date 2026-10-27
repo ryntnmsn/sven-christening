@@ -16,10 +16,10 @@ class GuestController extends Controller
     {
         return view('admin.invite', [
             'guests' => Guest::query()->with('subGuestResponses')->latest()->get(),
-            'confirmedAttendeeCount' => Guest::query()->where('confirmed', true)->count()
+            'confirmedAttendeeCount' => Guest::query()->where('confirmed', 1)->count()
                 + GuestSubGuest::query()
                     ->where('attending', true)
-                    ->whereHas('guest', fn ($query) => $query->where('confirmed', true))
+                    ->whereHas('guest', fn ($query) => $query->where('confirmed', '>', 0))
                     ->count(),
         ]);
     }
