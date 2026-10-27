@@ -12,6 +12,8 @@ Route::get('/', function () {
     return view('app');
 })->name('home');
 
+Route::view('/pre-game', 'pre-game')->name('pre-game');
+
 
 Route::get('/clear-route', function () {
     Artisan::call('route:clear');

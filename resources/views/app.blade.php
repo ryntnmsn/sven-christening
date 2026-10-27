@@ -259,6 +259,14 @@
         cursor: pointer;
         font: 600 14px "Poppins", sans-serif;
       }
+      .pre-game-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+        width: min(100% - 36px, 480px);
+        text-decoration: none;
+      }
       .rsvp-action:hover {
         background: #4b3426;
       }
@@ -944,6 +952,7 @@
         </section>
         <section class="rsvp-section" aria-label="RSVP">
           <img class="rsvp-heading" src="rsvp_text.png" alt="RSVP" />
+          <a class="rsvp-action pre-game-link" href="{{ route('pre-game') }}">Play the pre-game</a>
           <form class="rsvp-form" id="rsvp-form">
             <label class="rsvp-label" for="rsvp-guest-name">Guest Name</label>
             <input
