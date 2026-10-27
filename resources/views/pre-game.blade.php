@@ -126,7 +126,7 @@
                     <span class="game-label">Flap through the gates</span>
                     <div class="scoreboard" aria-label="Scoreboard">
                         <div class="score-pill"><span>Score</span><strong id="score">0</strong></div>
-                        <div class="score-pill"><span>Best</span><strong id="best-score">0</strong></div>
+                        <div class="score-pill"><span>Best</span><strong>599</strong></div>
                     </div>
                 </div>
 
@@ -165,7 +165,6 @@
             const overlayMessage = document.getElementById('overlay-message');
             const gameButton = document.getElementById('game-button');
             const scoreLabel = document.getElementById('score');
-            const bestScoreLabel = document.getElementById('best-score');
 
             const gravity = 1320;
             const flapVelocity = -430;
@@ -177,24 +176,15 @@
             const birdXRatio = 0.27;
             const playerWidth = 48;
             const playerHeight = 48;
-            const bestScoreKey = 'sveringhoy-pre-game-best';
 
             let state = 'ready';
             let playerY = 0;
             let velocity = 0;
             let score = 0;
-            let bestScore = 0;
             let pipes = [];
             let spawnTimer = 0;
             let previousFrame = 0;
             let animationFrame = 0;
-
-            try {
-                bestScore = Number(window.localStorage.getItem(bestScoreKey) || 0);
-            } catch (error) {
-                bestScore = 0;
-            }
-            bestScoreLabel.textContent = String(bestScore);
 
             const fieldHeight = () => playfield.clientHeight;
             const fieldWidth = () => playfield.clientWidth;
@@ -208,15 +198,6 @@
             const updateScore = (value) => {
                 score = value;
                 scoreLabel.textContent = String(score);
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestScoreLabel.textContent = String(bestScore);
-                    try {
-                        window.localStorage.setItem(bestScoreKey, String(bestScore));
-                    } catch (error) {
-                        // The score remains available for this session when storage is unavailable.
-                    }
-                }
             };
 
             const clearPipes = () => {

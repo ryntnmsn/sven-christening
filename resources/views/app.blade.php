@@ -208,6 +208,28 @@
         padding: 28px 0;
         background: url("background.jpg") center / cover no-repeat;
       }
+      .pre-game-promo {
+        display: block;
+        width: min(100% - 36px, 640px);
+        margin: 22px auto 0;
+        overflow: hidden;
+        border-radius: 18px;
+        box-shadow: 0 10px 28px #385a6826;
+        transition: transform 180ms ease, box-shadow 180ms ease;
+      }
+      .pre-game-promo:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 34px #385a6833;
+      }
+      .pre-game-promo:focus-visible {
+        outline: 3px solid #6b4b35;
+        outline-offset: 4px;
+      }
+      .pre-game-promo img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
       .rsvp-heading {
         display: block;
         width: 100%;
@@ -258,14 +280,6 @@
         color: white;
         cursor: pointer;
         font: 600 14px "Poppins", sans-serif;
-      }
-      .pre-game-link {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 16px;
-        width: min(100% - 36px, 480px);
-        text-decoration: none;
       }
       .rsvp-action:hover {
         background: #4b3426;
@@ -952,7 +966,6 @@
         </section>
         <section class="rsvp-section" aria-label="RSVP">
           <img class="rsvp-heading" src="rsvp_text.png" alt="RSVP" />
-          <a class="rsvp-action pre-game-link" href="{{ route('pre-game') }}">Play the pre-game</a>
           <form class="rsvp-form" id="rsvp-form">
             <label class="rsvp-label" for="rsvp-guest-name">Guest Name</label>
             <input
@@ -999,6 +1012,9 @@
             </div>
           </form>
         </section>
+        <a class="pre-game-promo" href="{{ route('pre-game') }}" aria-label="Play Flappy Sven in the Pre Game">
+          <img src="{{ asset('flappy.jpg') }}" alt="Flappy Sven. Beat the best score and play to win a prize on the event day." loading="lazy" />
+        </a>
         <button class="back-button" id="back-to-cover" type="button">
           ← Back to invitation
         </button>
