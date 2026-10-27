@@ -5,10 +5,25 @@ use App\Http\Controllers\Admin\GuestController;
 use App\Http\Controllers\RsvpController;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
+
 
 Route::get('/', function () {
     return view('app');
 })->name('home');
+
+
+Route::get('/clear-route', function () {
+    Artisan::call('route:clear');
+    return 'Route cache cleared successfully!';
+});
+
+
+Route::get('/clear-cache', function () {
+    Artisan::call('route:cache');
+    return 'Routes cached successfully!';
+});
+
 
 Route::post('/rsvp/lookup', [RsvpController::class, 'lookup'])
     ->middleware('throttle:20,1')
