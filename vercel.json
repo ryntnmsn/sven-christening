@@ -2,24 +2,13 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run build",
   "outputDirectory": "public",
+  "installCommand": "composer install --no-dev --optimize-autoloader --no-interaction && npm install --ignore-scripts",
   "functions": {
     "api/index.php": {
       "runtime": "vercel-php@0.8.0"
     }
   },
   "routes": [
-    {
-      "src": "/",
-      "dest": "/api/index.php"
-    },
-    {
-      "src": "/index.php",
-      "dest": "/api/index.php"
-    },
-    {
-      "src": "/build/(.*)",
-      "dest": "/public/build/$1"
-    },
     {
       "handle": "filesystem"
     },
