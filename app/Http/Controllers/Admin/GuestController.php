@@ -35,4 +35,23 @@ class GuestController extends Controller
 
         return redirect()->route('admin.invite')->with('status', 'Guest added successfully.');
     }
+
+    public function update(Request $request, Guest $guest): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255', Rule::unique('guests', 'name')->ignore($guest)],
+            'sub_guests' => ['required', 'integer', 'min:0', 'max:99'],
+        ]);
+
+        $guest->update($validated);
+
+        return redirect()->route('admin.invite')->with('status', 'Guest updated successfully.');
+    }
+
+    public function destroy(Guest $guest): RedirectResponse
+    {
+        $guest->delete();
+
+        return redirect()->route('admin.invite')->with('status', 'Guest deleted successfully.');
+    }
 }

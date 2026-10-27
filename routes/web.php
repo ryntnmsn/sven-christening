@@ -43,6 +43,8 @@ Route::middleware(['auth', EnsureUserIsAdmin::class])->prefix('admin')->name('ad
     Route::redirect('/', '/admin/invite')->name('dashboard');
     Route::get('/invite', [GuestController::class, 'index'])->name('invite');
     Route::post('/guests', [GuestController::class, 'store'])->name('guests.store');
+    Route::put('/guests/{guest}', [GuestController::class, 'update'])->name('guests.update');
+    Route::delete('/guests/{guest}', [GuestController::class, 'destroy'])->name('guests.destroy');
     Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
 });
 

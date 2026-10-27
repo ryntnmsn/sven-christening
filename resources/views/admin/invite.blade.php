@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-<link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
-<link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+<link rel="icon" href="/favicon.ico?v=2" sizes="any">
+<link rel="icon" type="image/png" href="/favicon.png?v=2">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -68,6 +68,7 @@
                                     <th scope="col" class="px-5 py-4 font-semibold">Confirmed</th>
                                     <th scope="col" class="px-5 py-4 text-right font-semibold">Number of Sub Guests</th>
                                     <th scope="col" class="px-5 py-4 text-right font-semibold">Sub guests</th>
+                                    <th scope="col" class="px-5 py-4 text-right font-semibold">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-[#f0e9df]">
@@ -88,10 +89,20 @@
                                                 <span class="text-[#b4a699]">—</span>
                                             @endif
                                         </td>
+                                        <td class="px-5 py-4">
+                                            <div class="flex justify-end gap-2">
+                                                <button type="button" data-edit-guest data-guest-id="{{ $guest->id }}" data-guest-name="{{ $guest->name }}" data-guest-sub-guests="{{ $guest->sub_guests }}" data-update-url="{{ route('admin.guests.update', $guest) }}" class="rounded-full border border-[#e5d9cb] px-3 py-1.5 text-xs font-semibold text-[#76583f] transition hover:border-[#b99b7d] hover:bg-[#faf7f2]">Edit</button>
+                                                <form method="POST" action="{{ route('admin.guests.destroy', $guest) }}" data-delete-guest-form data-confirm="Delete {{ $guest->name }}? This will also delete their sub-guest responses.">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="rounded-full border border-[#ead4ce] px-3 py-1.5 text-xs font-semibold text-[#9b4939] transition hover:bg-[#fcf3f1]">Delete</button>
+                                                </form>
+                                            </div>
+                                        </td>
                                     </tr>
                                     @if ($guest->sub_guests > 0)
                                         <tr id="sub-guests-{{ $guest->id }}" hidden class="bg-[#fcfaf7]">
-                                            <td colspan="5" class="px-5 py-4">
+                                            <td colspan="6" class="px-5 py-4">
                                                 <div class="rounded-xl border border-[#eee5da] bg-white p-4">
                                                     <h3 class="text-xs font-semibold uppercase tracking-[0.12em] text-[#8f8072]">Sub guests for {{ $guest->name }}</h3>
                                                     @if ($guest->subGuestResponses->isNotEmpty())
@@ -112,7 +123,7 @@
                                     @endif
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="px-5 py-12 text-center text-sm text-[#918276]">No guests have been added yet.</td>
+                                        <td colspan="6" class="px-5 py-12 text-center text-sm text-[#918276]">No guests have been added yet.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -133,8 +144,10 @@
                 <button type="button" data-close-guest-modal aria-label="Close dialog" class="grid size-9 shrink-0 place-items-center rounded-full text-xl text-[#837467] transition hover:bg-[#f7f3ed]">×</button>
             </div>
 
-            <form data-add-guest-form method="POST" action="{{ route('admin.guests.store') }}" class="mt-6 grid gap-5">
+            <form data-guest-form method="POST" action="{{ route('admin.guests.store') }}" data-store-url="{{ route('admin.guests.store') }}" class="mt-6 grid gap-5">
                 @csrf
+                <input type="hidden" name="_method" value="POST" disabled data-method-input>
+                <input type="hidden" name="guest_id" value="{{ old('guest_id') }}" data-guest-id-input>
                 <label class="grid gap-2 text-sm font-medium text-[#594536]">
                     Name
                     <input name="name" value="{{ old('name') }}" required maxlength="255" autocomplete="name" class="min-h-11 rounded-xl border border-[#e5d9cb] px-3 text-[#35261c] outline-none transition placeholder:text-[#b4a699] focus:border-[#9a7655] focus:ring-2 focus:ring-[#9a7655]/15" placeholder="Guest name">
@@ -158,19 +171,48 @@
 
     <script>
         const guestModal = document.querySelector('[data-guest-modal]');
+        const guestForm = document.querySelector('[data-guest-form]');
+        const guestModalTitle = document.querySelector('#guest-modal-title');
+        const methodInput = guestForm.querySelector('[data-method-input]');
+        const guestIdInput = guestForm.querySelector('[data-guest-id-input]');
+        const guestNameInput = guestForm.querySelector('input[name="name"]');
+        const subGuestsInput = guestForm.querySelector('input[name="sub_guests"]');
         const openGuestModal = () => {
             guestModal.classList.remove('hidden');
             guestModal.classList.add('flex');
             guestModal.querySelector('input[name="name"]').focus();
+        };
+        const setGuestFormMode = (mode, guest = null) => {
+            const editing = mode === 'edit';
+            guestForm.action = editing ? guest.dataset.updateUrl : guestForm.dataset.storeUrl;
+            methodInput.disabled = !editing;
+            methodInput.value = 'PUT';
+            guestIdInput.value = editing ? guest.dataset.guestId : '';
+            guestNameInput.value = editing ? guest.dataset.guestName : '';
+            subGuestsInput.value = editing ? guest.dataset.guestSubGuests : '0';
+            guestModalTitle.textContent = editing ? 'Edit guest' : 'Add a guest';
+            guestForm.querySelector('[data-save-guest-label]').textContent = editing ? 'Save Changes' : 'Save Guest';
+            guestForm.querySelector('[data-save-guest-button]').disabled = false;
+            guestForm.querySelector('[data-saving-icon]').classList.add('hidden');
         };
         const closeGuestModal = () => {
             guestModal.classList.add('hidden');
             guestModal.classList.remove('flex');
         };
 
-        document.querySelector('[data-open-guest-modal]').addEventListener('click', openGuestModal);
         document.querySelectorAll('[data-close-guest-modal]').forEach((button) => button.addEventListener('click', closeGuestModal));
-        document.querySelector('[data-add-guest-form]').addEventListener('submit', () => {
+        document.querySelectorAll('[data-edit-guest]').forEach((button) => button.addEventListener('click', () => {
+            setGuestFormMode('edit', button);
+            openGuestModal();
+        }));
+        document.querySelector('[data-open-guest-modal]').addEventListener('click', () => {
+            setGuestFormMode('create');
+            openGuestModal();
+        });
+        document.querySelectorAll('[data-delete-guest-form]').forEach((form) => form.addEventListener('submit', (event) => {
+            if (!confirm(form.dataset.confirm)) event.preventDefault();
+        }));
+        document.querySelector('[data-guest-form]').addEventListener('submit', () => {
             const button = document.querySelector('[data-save-guest-button]');
             if (button.disabled) return;
 
@@ -195,6 +237,16 @@
         });
 
         @if ($errors->any())
+            @if (old('guest_id'))
+                const failedGuestEdit = document.querySelector(`[data-edit-guest][data-guest-id="${CSS.escape(@js(old('guest_id')))}"]`);
+                if (failedGuestEdit) {
+                    setGuestFormMode('edit', failedGuestEdit);
+                    guestNameInput.value = @js(old('name'));
+                    subGuestsInput.value = @js(old('sub_guests'));
+                }
+            @else
+                setGuestFormMode('create');
+            @endif
             openGuestModal();
         @endif
     </script>

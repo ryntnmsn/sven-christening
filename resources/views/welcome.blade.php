@@ -3,8 +3,8 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
-        <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+        <link rel="icon" href="/favicon.ico?v=2" sizes="any">
+        <link rel="icon" type="image/png" href="/favicon.png?v=2">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
