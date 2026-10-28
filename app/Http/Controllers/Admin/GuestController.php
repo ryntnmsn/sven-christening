@@ -16,6 +16,7 @@ class GuestController extends Controller
     {
         return view('admin.invite', [
             'guests' => Guest::query()->with('subGuestResponses')->latest()->get(),
+            'totalGuestCount' => Guest::query()->count() + Guest::query()->sum('sub_guests'),
             'confirmedAttendeeCount' => Guest::query()->where('confirmed', 1)->count()
                 + GuestSubGuest::query()
                     ->where('attending', true)

@@ -47,6 +47,9 @@
                             <span class="inline-flex items-center gap-2 rounded-full border border-[#e5d9cb] bg-white px-3 py-1.5 text-xs font-medium text-[#76583f]">
                                 <strong class="text-sm text-[#4b3426]">{{ $confirmedAttendeeCount }}</strong> confirmed attendees
                             </span>
+                            <span class="inline-flex items-center gap-2 rounded-full border border-[#e5d9cb] bg-white px-3 py-1.5 text-xs font-medium text-[#76583f]">
+                                <strong class="text-sm text-[#4b3426]">{{ $totalGuestCount }}</strong> total guests and sub-guests
+                            </span>
                         </div>
                     </div>
                     <button type="button" data-open-guest-modal class="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#4b3426] px-5 text-sm font-semibold text-white transition hover:bg-[#634834]">
@@ -92,6 +95,7 @@
                                         <td class="px-5 py-4">
                                             <div class="flex justify-end gap-2">
                                                 <button type="button" data-edit-guest data-guest-id="{{ $guest->id }}" data-guest-name="{{ $guest->name }}" data-guest-sub-guests="{{ $guest->sub_guests }}" data-update-url="{{ route('admin.guests.update', $guest) }}" class="rounded-full border border-[#e5d9cb] px-3 py-1.5 text-xs font-semibold text-[#76583f] transition hover:border-[#b99b7d] hover:bg-[#faf7f2]">Edit</button>
+                                                <button type="button" data-copy-invite data-guest-name="{{ $guest->name }}" data-guest-code="{{ $guest->code }}" class="rounded-full border border-[#e5d9cb] px-3 py-1.5 text-xs font-semibold text-[#76583f] transition hover:border-[#b99b7d] hover:bg-[#faf7f2]">Copy</button>
                                                 <form method="POST" action="{{ route('admin.guests.destroy', $guest) }}" data-delete-guest-form data-confirm="Delete {{ $guest->name }}? This will also delete their sub-guest responses.">
                                                     @csrf
                                                     @method('DELETE')
@@ -211,6 +215,19 @@
         });
         document.querySelectorAll('[data-delete-guest-form]').forEach((form) => form.addEventListener('submit', (event) => {
             if (!confirm(form.dataset.confirm)) event.preventDefault();
+        }));
+        document.querySelectorAll('[data-copy-invite]').forEach((button) => button.addEventListener('click', async () => {
+            const invite = `https://sven-zayden.site/\nName: ${button.dataset.guestName}\nCode: ${button.dataset.guestCode}`;
+
+            try {
+                await navigator.clipboard.writeText(invite);
+                button.textContent = 'Copied';
+                window.setTimeout(() => {
+                    button.textContent = 'Copy';
+                }, 1500);
+            } catch {
+                alert('Unable to copy the invite. Please check clipboard permissions and try again.');
+            }
         }));
         document.querySelector('[data-guest-form]').addEventListener('submit', () => {
             const button = document.querySelector('[data-save-guest-button]');
